@@ -1,0 +1,22 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: |
+  ACM Certificate to be used by the website CloudFront distribution.
+  The cert has to be in the us-east-1 region to be used by CloudFront and hence is in a separate 
+  CloudFormation stack.
+
+Parameters:
+  DomainName:
+    Description: Domain name (don't include www.)
+    Type: String
+Resources:
+  SSLCert:
+      Type: "AWS::CertificateManager::Certificate"
+      Properties: 
+        DomainName: !Sub "*.${DomainName}"
+        SubjectAlternativeNames:
+          - !Ref DomainName
+        ValidationMethod: DNS
+Outputs:
+  SSLCertArn:
+    Description: ARN of SSL certificate
+    Value: !Ref SSLCert

@@ -36,3 +36,25 @@
     transform: rotate(360deg);
   }
 }
+div#grid-container {
+  display: grid;
+  grid-template-columns: 1fr 3fr;
+  min-height: 400px;
+}
+
+div#grid-container > div {
+  padding: 10px;
+}
+
+div#sidebar {
+  background-color: black;
+  color: white;
+}
+div.DraftEditor-root {
+  border: 1px solid #cccccc;
+  min-height: 300px;
+}
+div#sidebar li {
+  text-decoration: underline;
+  cursor: pointer;
+}

@@ -1,0 +1,179 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: S3 bucket for website
+
+Parameters:
+  Env:
+    Description: deployment environment
+    Type: String
+    AllowedValues:
+      - dev
+      - prod
+    Default: dev
+  DomainName:
+    Description: Domain name (don't include www.)
+    Type: String
+  SSLCert: 
+    Description: ARN of SSL certificate to be used by the CloudFront distribution
+    Type: String
+
+
+Mappings:
+  RegionMap:
+    us-east-1:
+      S3hostedzoneID: Z3AQBSTGFYJSTF
+      websiteendpoint: s3-website-us-east-1.amazonaws.com
+    us-west-1:
+      S3hostedzoneID: Z2F56UZL2M1ACD
+      websiteendpoint: s3-website-us-west-1.amazonaws.com
+    us-west-2:
+      S3hostedzoneID: Z3BJ6K6RIION7M
+      websiteendpoint: s3-website-us-west-2.amazonaws.com
+    eu-west-1:
+      S3hostedzoneID: Z1BKCTXD74EZPE
+      websiteendpoint: s3-website-eu-west-1.amazonaws.com
+    ap-southeast-1:
+      S3hostedzoneID: Z3O0J2DXBE1FTB
+      websiteendpoint: s3-website-ap-southeast-1.amazonaws.com
+    ap-southeast-2:
+      S3hostedzoneID: Z1WCIGYICN2BYD
+      websiteendpoint: s3-website-ap-southeast-2.amazonaws.com
+    ap-northeast-1:
+      S3hostedzoneID: Z2M4EHUR26P7ZW
+      websiteendpoint: s3-website-ap-northeast-1.amazonaws.com
+    sa-east-1:
+      S3hostedzoneID: Z31GFT0UA1I2HV
+      websiteendpoint: s3-website-sa-east-1.amazonaws.com
+
+Resources:
+  S3BucketW3:
+    Type: "AWS::S3::Bucket"
+    Properties: 
+      BucketName: !Sub www.${DomainName}
+      AccessControl: PublicRead
+      VersioningConfiguration:
+        Status: Enabled
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: index.html
+  S3BucketBare:
+    Type: "AWS::S3::Bucket"
+    Properties: 
+      BucketName: !Sub ${DomainName}
+      AccessControl: PublicRead
+      WebsiteConfiguration:
+        RedirectAllRequestsTo:
+          HostName: !Sub www.${DomainName}
+          Protocol: http
+
+  S3BucketPolicy:
+      Type: "AWS::S3::BucketPolicy"
+      Properties: 
+        Bucket: !Ref S3BucketW3
+        PolicyDocument: 
+          Version: "2012-10-17"
+          Statement:
+            -
+              Sid: PublicReadGetObject
+              Effect: Allow
+              Principal: "*"
+              Action:
+                - s3:GetObject
+              Resource: !Sub "arn:aws:s3:::www.${DomainName}/*"
+
+
+  CloudFront:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Origins:
+        - DomainName: !Sub 
+            - ${S3BucketW3}.${S3WebEndpoint}
+            - { S3BucketW3: !Ref S3BucketW3, S3WebEndpoint: !FindInMap [RegionMap, !Ref "AWS::Region", websiteendpoint] }
+          Id: myS3Origin
+          CustomOriginConfig:
+            OriginProtocolPolicy: http-only
+        Enabled: 'true'
+        Comment: !Sub Distribution for www.${DomainName}
+        HttpVersion: http2
+        Aliases:
+        - !Sub www.${DomainName}
+        DefaultCacheBehavior:
+          AllowedMethods:
+          - DELETE
+          - GET
+          - HEAD
+          - OPTIONS
+          - PATCH
+          - POST
+          - PUT
+          TargetOriginId: myS3Origin
+          Compress: True
+          MinTTL: 300
+          DefaultTTL: 300
+          ForwardedValues:
+            QueryString: 'false'
+            Cookies:
+              Forward: none
+          ViewerProtocolPolicy: redirect-to-https
+        PriceClass: PriceClass_100
+        ViewerCertificate:
+          AcmCertificateArn: !Ref SSLCert
+          SslSupportMethod: sni-only
+  CloudFrontBare:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Origins:
+        - DomainName: !Sub 
+            - ${S3BucketBare}.${S3WebEndpoint}
+            - { S3BucketBare: !Ref S3BucketBare, S3WebEndpoint: !FindInMap [RegionMap, !Ref "AWS::Region", websiteendpoint] }
+          Id: myS3OriginBare
+          CustomOriginConfig:
+            OriginProtocolPolicy: http-only
+        Enabled: 'true'
+        Comment: !Sub Distribution for ${DomainName}
+        HttpVersion: http2
+        Aliases:
+        - !Ref DomainName
+        DefaultCacheBehavior:
+          AllowedMethods:
+          - DELETE
+          - GET
+          - HEAD
+          - OPTIONS
+          - PATCH
+          - POST
+          - PUT
+          TargetOriginId: myS3OriginBare
+          Compress: True
+          DefaultTTL: 604800
+          ForwardedValues:
+            QueryString: 'false'
+            Cookies:
+              Forward: none
+          ViewerProtocolPolicy: redirect-to-https
+        PriceClass: PriceClass_100
+        ViewerCertificate:
+          AcmCertificateArn: !Ref SSLCert
+          SslSupportMethod: sni-only
+  
+  DnsEntryW3:
+    Type: "AWS::Route53::RecordSet"
+    Properties: 
+      AliasTarget: 
+        HostedZoneId: Z2FDTNDATAQYW2
+        DNSName: !GetAtt CloudFront.DomainName
+      Comment: Route to CloudFront distribution
+      HostedZoneName: !Sub ${DomainName}.
+      Name: !Sub www.${DomainName}.
+      Type: A
+  DnsEntryBare:
+    Type: "AWS::Route53::RecordSet"
+    Properties: 
+      AliasTarget: 
+        HostedZoneId: Z2FDTNDATAQYW2
+        DNSName: !GetAtt CloudFrontBare.DomainName
+      Comment: Route to CloudFront distribution redirect
+      HostedZoneName: !Sub ${DomainName}.
+      Name: !Sub ${DomainName}.
+      Type: A
