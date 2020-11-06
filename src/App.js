@@ -278,7 +278,8 @@ class Notes extends Component {
   
     this.state = {
        notes: [],
-       note: null
+       note: null,
+       loading: true
     }
     this.onSave = this.onSave.bind(this);
     this.addNote = this.addNote.bind(this);
@@ -292,7 +293,7 @@ class Notes extends Component {
   };
   getNotes() {
     this.apiConfig.headers.Authorization = `Bearer ${this.props.accessToken}`;
-    axios.get(`${this.apiUrl}?user=${encodeURIComponent(this.props.user.sub)}`, this.apiConfig).then(res => this.setState({notes: res.data}));
+    axios.get(`${this.apiUrl}?user=${encodeURIComponent(this.props.user.sub)}`, this.apiConfig).then(res => this.setState({notes: res.data, loading: false}));
 
   }
   componentDidMount() {
@@ -357,9 +358,12 @@ class Notes extends Component {
     return (
       <div id="grid-container">
         <div id="sidebar">
+          {this.state.loading ? <p>Loading...</p> : 
+          ( this.state.notes.length > 0 ? 
           <ul>
-            {this.state.notes.map(n => <li key={n.id} onClick={() => this.documentClicked(n.id)}>{n.name}</li>)}
-          </ul>
+          {this.state.notes.map(n => <li key={n.id} onClick={() => this.documentClicked(n.id)}>{n.name}</li>)}
+          </ul> :
+          <p>No notes yet</p>)}
         </div>
         <div><NotesEditor note={this.state.note} notes={this.state.notes} onSave={this.onSave} addNote={this.addNote} documentClicked={this.documentClicked} /></div>
       </div>
