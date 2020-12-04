@@ -31,6 +31,7 @@ export default class NotesEditor extends React.Component {
       this.noteLink = this.noteLink.bind(this);
       this.toggleStyle = this.toggleStyle.bind(this);
       this.toggleBlock = this.toggleBlock.bind(this);
+      this.onDelete = this.onDelete.bind(this);
       this.saveInterval = window.setInterval(() => {
         if (this.state.isDirty && !this.state.isSaving) {
           this.props.onSave({
@@ -119,6 +120,16 @@ export default class NotesEditor extends React.Component {
       const name = this.createDefaultName();
       const id = '';
       this.setState({editorState, name, id});
+    }
+    onDelete() {
+        if (!this.state.id) {
+            return;
+        }
+        if (!window.confirm("The note will be deleted permanently! Are you sure?")) {
+            return;
+        }
+        this.props.onDelete(this.state.id);
+        this.handleNew();
     }
     toggleStyle(newStyle) {
       const editorState = RichUtils.toggleInlineStyle(this.state.editorState, newStyle);
@@ -216,8 +227,11 @@ export default class NotesEditor extends React.Component {
     render() {
       return (
         <div>
-          <div><button onClick={this.handleNew}>New</button></div>
-          <input type="text" placeholder="name" value={this.state.name} onChange={(e) => this.setState({name: e.target.value, isDirty: true})} />
+          <div>
+            <button onClick={this.handleNew}>New</button>
+            <button class="danger" onClick={this.onDelete}>Delete</button>
+          </div>
+          <input type="text" className="note-name" placeholder="name" value={this.state.name} onChange={(e) => this.setState({name: e.target.value, isDirty: true})} />
           <div>
           <button onClick={() => this.toggleStyle('BOLD')}><b>B</b></button>
           <button onClick={() => this.toggleStyle('ITALIC')}><i>I</i></button>

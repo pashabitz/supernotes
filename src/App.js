@@ -10,14 +10,24 @@ import {EditorState, convertToRaw} from 'draft-js';
 const LoginButton = () => {
   const { loginWithRedirect } = useAuth0();
 
-  return <button onClick={() => loginWithRedirect()}>Log In</button>;
+  return <button id="login" onClick={() => loginWithRedirect()}>Log In</button>;
 };
 
+const MadeWith = () => {
+  return <footer>Made with <a href="https://less-dev.com">less</a></footer>;
+}
+const PublicHome = () => {
+  return <div id="public-home">
+    <h1>Take beautiful interlinked notes</h1>
+    <LoginButton />
+    <MadeWith />
+  </div>;
+}
 const LogoutButton = () => {
   const { logout, user } = useAuth0();
 
   return (
-    <div>
+    <div id="logout">
     <span>{user.email}</span>
     <button onClick={() => logout({ returnTo: window.location.origin })}>
       Log Out
@@ -42,6 +52,7 @@ class Notes extends Component {
     this.onSave = this.onSave.bind(this);
     this.addNote = this.addNote.bind(this);
     this.documentClicked = this.documentClicked.bind(this);
+    this.onDelete = this.onDelete.bind(this);
   }
   apiUrl = "https://tb7nnzwzpc.less-dev.com/notes/notes";
   apiConfig = {
@@ -118,6 +129,12 @@ class Notes extends Component {
       this.setState({note});
     }
   }
+  onDelete(id) {
+    axios.delete(`${this.apiUrl}?id=${encodeURIComponent(id)}`, this.apiConfig).then(res => {
+      const notes = this.state.notes.filter(n => n.id !== id);
+      this.setState({notes});
+    });
+  }
   render() {
     return (
       <div id="grid-container">
@@ -129,7 +146,15 @@ class Notes extends Component {
           </ul> :
           <p>No notes yet</p>)}
         </div>
-        <div><NotesEditor note={this.state.note} notes={this.state.notes} onSave={this.onSave} addNote={this.addNote} documentClicked={this.documentClicked} /></div>
+        <div>
+          <NotesEditor
+          note={this.state.note}
+          notes={this.state.notes}
+          onSave={this.onSave}
+          addNote={this.addNote}
+          documentClicked={this.documentClicked}
+          onDelete={this.onDelete} />
+        </div>
       </div>
     )
   }
@@ -147,12 +172,16 @@ function App() {
   }
 
   if (!isAuthenticated) {
-    return <LoginButton />
+    return <PublicHome />
   }
   return (
     <div>
-      <LogoutButton />
+      <header>
+        <span id="logo">Supernotes</span>
+        <LogoutButton />
+      </header>
       <Notes accessToken={accessToken} user={user} />
+      <MadeWith />
     </div>
   );
 }

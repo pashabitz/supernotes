@@ -18,7 +18,10 @@ def after_insert(table_config, orm, values):
 
 
 def before_delete(table_config, orm, params, access_token):
-    return False
+    existing = orm["notes"].get_item(params)
+    if not existing or existing["user"] != access_token["sub"]:
+        return False
+    return True
 
 
 def after_delete(table_config, orm, params):

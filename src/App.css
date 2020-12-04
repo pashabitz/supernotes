@@ -1,60 +1,91 @@
+@import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@300&display=swap');
+
+body {
+  height: 100%;
+}
+* {
+  font-family: 'Work Sans', sans-serif;
+  color: #5500aa;
+}
 .App {
   text-align: center;
 }
-
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+header {
+  border-bottom: 1px solid #5500aa;
 }
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+div#logout {
+  float: right;
+  margin-top: 0.3em;
 }
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
+button {
+  background-color: #5500aa;
+  color: white;
+  border: 1px solid white;
+  border-radius: 3px;
+  cursor: pointer;
+}
+button > * {
+  background-color: #5500aa;
   color: white;
 }
-
-.App-link {
-  color: #61dafb;
+button#login {
+  font-size: 2em;
+}
+span#logo {
+  font-size: 1.5em;
+}
+div#public-home {
+  text-align: center;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
 div#grid-container {
   display: grid;
-  grid-template-columns: 1fr 3fr;
-  min-height: 400px;
+  grid-template-columns: 1fr 4fr;
 }
-
 div#grid-container > div {
   padding: 10px;
 }
 
-div#sidebar {
-  background-color: black;
-  color: white;
-}
 div.DraftEditor-root {
   border: 1px solid #cccccc;
   min-height: 300px;
+}
+div.DraftEditor-root * {
+  color: #333;
 }
 div#sidebar li {
   text-decoration: underline;
   cursor: pointer;
 }
+input.note-name {
+  width: 100%;
+  border: 1px solid #cccccc;
+  font-size: 2em;
+  color: #333;
+}
+footer {
+  position: fixed;
+  bottom: 0;
+  text-align: center;
+  width: 100%;
+}
+button.danger {
+  background-color: red;
+}
+@media only screen 
+  and (max-device-width: 812px) 
+  and (-webkit-min-device-pixel-ratio: 2) {
+    div#grid-container {
+      display: block;
+    }
+    div#grid-container > div {
+      width: 100%;
+    }
+    div.DraftEditor-root {
+      width: 96%;
+    }
+    input.note-name {
+      width: 95%;
+    }
+}
+
